@@ -39,7 +39,7 @@ func (rh RunnersController) CreateRunner(c *gin.Context) {
 	}
 	response, responseErr := rh.runnersService.CreateRunner(&runner)
 	if responseErr != nil {
-		c.AbortWithError(responseErr.Status, responseErr)
+		c.AbortWithStatusJSON(responseErr.Status, responseErr)
 		return
 	}
 	c.JSON(http.StatusOK, response)
@@ -49,7 +49,7 @@ func (rh RunnersController) UpdateRunner(c *gin.Context) {
 	if err != nil {
 		log.Println(
 			"Error while reading update runner request body", err)
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 	var runner models.Runner
@@ -63,7 +63,7 @@ func (rh RunnersController) UpdateRunner(c *gin.Context) {
 	}
 	responseErr := rh.runnersService.UpdateRunner(&runner)
 	if responseErr != nil {
-		c.AbortWithError(responseErr.Status, responseErr)
+		c.AbortWithStatusJSON(responseErr.Status, responseErr)
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -72,7 +72,7 @@ func (rh RunnersController) DeleteRunner(c *gin.Context) {
 	runnerID := c.Param("id")
 	responseErr := rh.runnersService.DeleteRunner(runnerID)
 	if responseErr != nil {
-		c.AbortWithError(responseErr.Status, responseErr)
+		c.AbortWithStatusJSON(responseErr.Status, responseErr)
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -90,7 +90,7 @@ func (rh RunnersController) GetRunnersBatch(c *gin.Context) {
 	params := c.Request.URL.Query()
 	country := params.Get("country")
 	year := params.Get("year")
-	response, responseErr := rh.runnersService.GetRunnerBatch(country, year)
+	response, responseErr := rh.runnersService.GetRunnersBatch(country, year)
 	if responseErr != nil {
 		c.JSON(responseErr.Status, responseErr)
 		return

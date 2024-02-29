@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"github.com/fentezi/runnerBook/controllers"
+	"github.com/fentezi/runnerBook/repositories"
 	"github.com/fentezi/runnerBook/services"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"

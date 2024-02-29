@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/fentezi/runnerBook/models"
+	"github.com/fentezi/runnerBook/repositories"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,7 +22,7 @@ func NewRunnersService(
 	}
 }
 
-func (rs *RunnersService) CreateRunner(
+func (rs RunnersService) CreateRunner(
 	runner *models.Runner) (*models.Runner, *models.ResponseError) {
 	responseErr := validateRunner(runner)
 	if responseErr != nil {
@@ -30,9 +31,9 @@ func (rs *RunnersService) CreateRunner(
 	return rs.runnersRepository.CreateRunner(runner)
 }
 
-func (rs *RunnersService) UpdateRunner(
+func (rs RunnersService) UpdateRunner(
 	runner *models.Runner) *models.ResponseError {
-	responseErr := validateRinnerID(runner.ID)
+	responseErr := validateRunnerID(runner.ID)
 	if responseErr != nil {
 		return responseErr
 	}
@@ -40,21 +41,21 @@ func (rs *RunnersService) UpdateRunner(
 	if responseErr != nil {
 		return responseErr
 	}
-	return rs.resultsRepository.UpdateRunner(runner)
+	return rs.runnersRepository.UpdateRunner(runner)
 }
 
-func (rs *RunnersService) DeleteRunner(
+func (rs RunnersService) DeleteRunner(
 	runnerID string) *models.ResponseError {
-	responseErr := validateRinnerID(runnerID)
+	responseErr := validateRunnerID(runnerID)
 	if responseErr != nil {
 		return responseErr
 	}
 	return rs.runnersRepository.DeleteRunner(runnerID)
 }
 
-func (rs *RunnersService) GetRunner(
+func (rs RunnersService) GetRunner(
 	runnerID string) (*models.Runner, *models.ResponseError) {
-	responseErr := validateRinnerID(runnerID)
+	responseErr := validateRunnerID(runnerID)
 	if responseErr != nil {
 		return nil, responseErr
 	}
@@ -70,7 +71,7 @@ func (rs *RunnersService) GetRunner(
 	return runner, nil
 }
 
-func (rs *RunnersService) GetRunnersBatch(
+func (rs RunnersService) GetRunnersBatch(
 	country, year string) ([]*models.Runner, *models.ResponseError) {
 	if country != "" && year != "" {
 		return nil, &models.ResponseError{
@@ -79,7 +80,7 @@ func (rs *RunnersService) GetRunnersBatch(
 		}
 	}
 	if country != "" {
-		return rs.runnersRepository.GetRunnersByCountry(country), nil
+		return rs.runnersRepository.GetRunnersByCountry(country)
 	}
 	if year != "" {
 		intYear, err := strconv.Atoi(year)
@@ -96,10 +97,10 @@ func (rs *RunnersService) GetRunnersBatch(
 				Status:  http.StatusBadRequest,
 			}
 		}
-		return rs.runnersRepository.GetRunnersByYear(intYear), nil
+		return rs.runnersRepository.GetRunnersByYear(intYear)
 	}
+	return rs.runnersRepository.GetAllRunners()
 }
-	return rs.runnersRepository.GetAllRunners(), nil
 
 func validateRunner(runner *models.Runner) *models.ResponseError {
 	if runner.FirstName == "" {
@@ -129,7 +130,7 @@ func validateRunner(runner *models.Runner) *models.ResponseError {
 	return nil
 }
 
-func validateRinnerID(runnerID string) *models.ResponseError {
+func validateRunnerID(runnerID string) *models.ResponseError {
 	if runnerID == "" {
 		return &models.ResponseError{
 			Message: "Invalid runner ID",

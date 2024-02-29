@@ -1,6 +1,10 @@
-package runnerBook
+package main
 
-import "log"
+import (
+	"github.com/fentezi/runnerBook/config"
+	"github.com/fentezi/runnerBook/server"
+	"log"
+)
 
 func main() {
 	log.Println("Starting Runners App")

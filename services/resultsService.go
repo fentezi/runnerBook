@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/fentezi/runnerBook/models"
+	"github.com/fentezi/runnerBook/repositories"
 	"net/http"
 	"time"
 )
@@ -83,7 +84,7 @@ func (rs ResultsService) CreateResult(result *models.Result) (*models.Result, *m
 			}
 		}
 		if raceResult < personalBest {
-			runner.PersonalBest = personalBest
+			runner.PersonalBest = string(personalBest)
 		}
 	}
 	if result.Year == currentYear {
@@ -117,17 +118,27 @@ func (rs ResultsService) DeleteResult(resultID string) *models.ResponseError {
 			Status:  http.StatusBadRequest,
 		}
 	}
+	err := repositories.BeginTransaction(
+		rs.runnersRepository, rs.resultsRepository)
+	if err != nil {
+		return &models.ResponseError{
+			Message: "Failed to start transaction",
+			Status:  http.StatusBadRequest,
+		}
+	}
 	result, responseErr := rs.resultsRepository.DeleteResult(resultID)
 	if responseErr != nil {
 		return responseErr
 	}
 	runner, responseErr := rs.runnersRepository.GetRunner(result.RunnerID)
 	if responseErr != nil {
+		repositories.RollbackTransaction(rs.runnersRepository, rs.resultsRepository)
 		return responseErr
 	}
 	if runner.PersonalBest == result.RaceResult {
-		personalBest, responseErr := rs.resultsRepository.GetPersonalBestResult(result.RunnerID)
+		personalBest, responseErr := rs.resultsRepository.GetPersonalBestResults(result.RunnerID)
 		if responseErr != nil {
+			repositories.RollbackTransaction(rs.runnersRepository, rs.resultsRepository)
 			return responseErr
 		}
 		runner.PersonalBest = personalBest
@@ -136,14 +147,17 @@ func (rs ResultsService) DeleteResult(resultID string) *models.ResponseError {
 	if runner.SeasonBest == result.RaceResult && result.Year == currentYear {
 		seasonBest, responseErr := rs.resultsRepository.GetSeasonBestResults(result.RunnerID, result.Year)
 		if responseErr != nil {
+			repositories.RollbackTransaction(rs.runnersRepository, rs.resultsRepository)
 			return responseErr
 		}
 		runner.SeasonBest = seasonBest
 	}
 	responseErr = rs.runnersRepository.UpdateRunnerResults(runner)
 	if responseErr != nil {
+		repositories.RollbackTransaction(rs.runnersRepository, rs.resultsRepository)
 		return responseErr
 	}
+	repositories.CommitTransaction(rs.runnersRepository, rs.resultsRepository)
 	return nil
 }
 
