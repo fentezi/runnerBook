@@ -4,6 +4,7 @@ import (
 	"github.com/fentezi/runnerBook/models"
 	"github.com/fentezi/runnerBook/repositories"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -84,7 +85,7 @@ func (rs ResultsService) CreateResult(result *models.Result) (*models.Result, *m
 			}
 		}
 		if raceResult < personalBest {
-			runner.PersonalBest = string(personalBest)
+			runner.PersonalBest = strconv.FormatInt(int64(personalBest), 10)
 		}
 	}
 	if result.Year == currentYear {

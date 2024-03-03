@@ -12,15 +12,28 @@ import (
 
 type ResultsController struct {
 	resultsService *services.ResultsService
+	usersService   *services.UsersService
 }
 
-func NewResultsController(resultsService *services.ResultsService) *ResultsController {
+func NewResultsController(resultsService *services.ResultsService, usersService *services.UsersService) *ResultsController {
 	return &ResultsController{
 		resultsService: resultsService,
+		usersService:   usersService,
 	}
 }
 
 func (rh ResultsController) CreateResult(c *gin.Context) {
+	accessToken := c.Request.Header.Get("Token")
+	auth, responseErr := rh.usersService.AuthorizeUser(
+		accessToken, []string{ROLE_ADMIN})
+	if responseErr != nil {
+		c.JSON(responseErr.Status, responseErr)
+		return
+	}
+	if !auth {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Println(
@@ -46,8 +59,19 @@ func (rh ResultsController) CreateResult(c *gin.Context) {
 }
 
 func (rh *ResultsController) DeleteResult(c *gin.Context) {
+	accessToken := c.Request.Header.Get("Token")
+	auth, responseErr := rh.usersService.AuthorizeUser(
+		accessToken, []string{ROLE_ADMIN})
+	if responseErr != nil {
+		c.JSON(responseErr.Status, responseErr)
+		return
+	}
+	if !auth {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
 	resultID := c.Param("id")
-	responseErr := rh.resultsService.DeleteResult(resultID)
+	responseErr = rh.resultsService.DeleteResult(resultID)
 	if responseErr != nil {
 		c.JSON(responseErr.Status, responseErr)
 		return

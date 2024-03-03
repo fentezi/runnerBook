@@ -15,23 +15,29 @@ type HttpServer struct {
 	router            *gin.Engine
 	runnersController *controllers.RunnersController
 	resultController  *controllers.ResultsController
+	usersController   *controllers.UsersController
 }
 
 func InitHttpServer(config *viper.Viper,
 	dbHandler *sql.DB) HttpServer {
 	runnersRepository := repositories.NewRunnersRepository(dbHandler)
 	resultRepository := repositories.NewResultsRepository(dbHandler)
+	usersRepository := repositories.NewUsersRepository(dbHandler)
 	runnersService := services.NewRunnersService(
 		runnersRepository, resultRepository)
 	resultsService := services.NewResultsService(
 		resultRepository, runnersRepository)
-	runnersController := controllers.NewRunnersController(runnersService)
-	resultsController := controllers.NewResultsController(resultsService)
+	usersService := services.NewUsersService(usersRepository)
+	runnersController := controllers.NewRunnersController(runnersService, usersService)
+	resultsController := controllers.NewResultsController(resultsService, usersService)
+	usersController := controllers.NewUsersController(usersService)
 	router := gin.Default()
 	router.POST("/runner", runnersController.CreateRunner)
 	router.PUT("/runner", runnersController.UpdateRunner)
 	router.DELETE("/runner/:id", runnersController.DeleteRunner)
 	router.GET("/runner/:id", runnersController.GetRunner)
+	router.POST("/login", usersController.Login)
+	router.POST("/logout", usersController.Logout)
 	router.GET("/runner", runnersController.GetRunnersBatch)
 	router.POST("/result", resultsController.CreateResult)
 	router.DELETE("/result/:id", resultsController.DeleteResult)
@@ -40,6 +46,7 @@ func InitHttpServer(config *viper.Viper,
 		router:            router,
 		runnersController: runnersController,
 		resultController:  resultsController,
+		usersController:   usersController,
 	}
 }
 
